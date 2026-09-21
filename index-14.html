@@ -1,0 +1,799 @@
+<!doctype html>
+<html lang="es" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Saldo Cuba · Tasa del saldo hoy</title>
+<meta name="description" content="Tasa del saldo móvil en Cuba hoy: precio del saldo frente al CUP en el mercado informal, calculadora, gráfica histórica y más.">
+<meta property="og:title" content="Tasa del saldo en Cuba hoy">
+<meta property="og:description" content="Consulta la tasa del día, calcula tu saldo en CUP y sigue la evolución de los últimos 90 días.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#EEF2F9" id="metaTheme">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23E0303F'/%3E%3Cpath fill='white' d='m32 12 5.9 13.4 14.5 1.3-11 9.5 3.3 14.2L32 42.8 19.3 50.4l3.3-14.2-11-9.5 14.5-1.3z'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Figtree:wght@400..700&display=swap" rel="stylesheet">
+<script>(function(){try{var t=localStorage.getItem('tsc_theme');if(!t)t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.dataset.theme=t;}catch(e){}})();</script>
+
+<!--
+╔══════════════════════════════════════════════════════════════════╗
+║  CÓMO PUBLICAR ESTA WEB                                           ║
+║  1) Sube este archivo (index.html) a tu hosting (Netlify,         ║
+║     GitHub Pages, Cloudflare Pages, cPanel...). No necesita nada  ║
+║     más para verse.                                               ║
+║  2) Para que el panel admin publique la tasa para TODOS,          ║
+║     elige una opción (explicadas dentro del panel > Ajustes):     ║
+║       A) Sencilla: publicas en el panel, descargas data.json y    ║
+║          lo subes junto a index.html.                             ║
+║       B) Recomendada: conecta Firebase (gratis) pegando apiKey y  ║
+║          projectId en CONFIG, aquí abajo. Publicas y se ve al     ║
+║          instante, sin subir archivos.                            ║
+║  3) Cambia ADMIN_PASSWORD (solo modo A).                          ║
+╚══════════════════════════════════════════════════════════════════╝
+-->
+
+<style>
+:root{
+  --bg:#EEF2F9;--card:#fff;--ink:#0B1B3F;--muted:#5B6885;--line:#DBE2F0;--chip:#EEF2FA;
+  --brand:#0B2A6B;--red:#E0303F;--redsoft:#FDECEE;--green:#0F9D6B;--greensoft:#E2F5EC;
+  --amber:#9A6412;--ambersoft:#FFF3D6;--focus:#2F6BFF;--tk1:#0F3383;--tk2:#071A45;
+  --display:'Bricolage Grotesque','Figtree',system-ui,sans-serif;
+  --body:'Figtree',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  color-scheme:light;
+}
+[data-theme=dark]{
+  --bg:#070D1C;--card:#0F1932;--ink:#E9EEFB;--muted:#8E9BC2;--line:#1E2C50;--chip:#15213F;
+  --brand:#8FAEFF;--red:#FF5A68;--redsoft:#3A1520;--green:#2DD4A0;--greensoft:#0E2F2A;
+  --amber:#F5C05A;--ambersoft:#33270F;--focus:#7FA2FF;--tk1:#18398F;--tk2:#0A1B4B;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.5 var(--body);transition:background .3s,color .3s;overflow-x:hidden}
+h1,h2,h3{font-family:var(--display);margin:0;line-height:1.1;letter-spacing:-.02em}
+p{margin:0}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;padding:0}
+input,textarea,select{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px;border-radius:8px}
+.i{width:1.15em;height:1.15em;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none;vertical-align:-.2em}
+.wrap{max-width:1040px;margin:0 auto;padding:0 16px}
+.stripe{height:5px;background:linear-gradient(90deg,#0B2A6B 0 33.3%,#fff 33.3% 66.6%,#E0303F 66.6%)}
+.status{display:flex;align-items:center;gap:8px;padding:10px 0 2px;font-size:13px;color:var(--muted);flex-wrap:wrap}
+.status .dot{width:9px;height:9px;border-radius:50%;background:var(--red);box-shadow:0 0 0 0 var(--red);animation:ping 2.4s infinite}
+@keyframes ping{0%{box-shadow:0 0 0 0 rgba(224,48,63,.5)}70%,100%{box-shadow:0 0 0 9px rgba(224,48,63,0)}}
+.status b{color:var(--ink);font-weight:600}
+
+/* header */
+.hdr{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 82%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.hdr .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:10px;padding-bottom:10px}
+.logo{display:flex;align-items:center;gap:10px;min-width:0}
+.logo .mark{width:40px;height:40px;border-radius:12px;background:var(--red);display:grid;place-items:center;color:#fff;flex:none}
+.logo .mark svg{width:22px;height:22px;fill:#fff}
+.logo .t{font:700 20px/1 var(--display);letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.logo>div:last-child{min-width:0}.logo .s{display:block;font:500 12px/1.2 var(--body);color:var(--muted);letter-spacing:0;margin-top:3px}
+.hdr .right{display:flex;align-items:center;gap:10px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 16px;border-radius:14px;font-weight:600;font-size:15px;background:var(--chip);border:1px solid var(--line);transition:transform .15s,background .2s}
+.btn:active{transform:scale(.97)}
+.btn.primary{background:var(--red);border-color:var(--red);color:#fff}
+.btn.navy{background:var(--brand);border-color:var(--brand);color:#fff}
+[data-theme=dark] .btn.navy{background:var(--card);border-color:var(--line);color:var(--ink)}
+.btn.sm{padding:8px 12px;font-size:14px;border-radius:12px}
+.btn.danger{color:var(--red)}
+.btn[disabled]{opacity:.5;pointer-events:none}
+
+/* theme switch: sol y luna */
+.theme{position:relative;width:70px;height:38px;border-radius:99px;background:linear-gradient(180deg,#7EC8FF,#C4E6FF);border:1px solid rgba(11,27,63,.12);overflow:hidden;transition:background .4s;flex:none}
+[data-theme=dark] .theme{background:linear-gradient(180deg,#0A1440,#1D2C74);border-color:rgba(255,255,255,.14)}
+.theme .stars{position:absolute;inset:0;opacity:0;transition:opacity .4s;
+  background:radial-gradient(1.3px 1.3px at 14px 10px,#fff,transparent),radial-gradient(1px 1px at 24px 24px,#cfe0ff,transparent),radial-gradient(1.2px 1.2px at 34px 12px,#fff,transparent),radial-gradient(1px 1px at 20px 15px,#fff,transparent)}
+[data-theme=dark] .theme .stars{opacity:1}
+.theme .cloud{position:absolute;right:9px;bottom:7px;width:20px;height:9px;border-radius:9px;background:#fff;opacity:.9;transition:opacity .3s}
+.theme .cloud::before{content:"";position:absolute;left:4px;top:-5px;width:10px;height:10px;border-radius:50%;background:#fff}
+[data-theme=dark] .theme .cloud{opacity:0}
+.theme .knob{position:absolute;top:4px;left:4px;width:28px;height:28px;border-radius:50%;background:#FFD23F;box-shadow:0 0 0 4px rgba(255,210,63,.28);transition:transform .45s cubic-bezier(.5,1.5,.5,1),background .4s,box-shadow .4s}
+[data-theme=dark] .theme .knob{transform:translateX(32px);background:#E7ECFF;box-shadow:0 0 0 4px rgba(200,212,255,.14)}
+.theme svg{position:absolute;inset:4px;width:20px;height:20px;transition:transform .5s,opacity .3s}
+.theme .sun{fill:#F59E0B;stroke:#F59E0B;stroke-width:1.8;stroke-linecap:round}
+.theme .moon{fill:#4F63B8;stroke:none;opacity:0;transform:rotate(60deg) scale(.4)}
+[data-theme=dark] .theme .sun{opacity:0;transform:rotate(-90deg) scale(.3)}
+[data-theme=dark] .theme .moon{opacity:1;transform:none}
+
+/* layout */
+@media(max-width:520px){.logo .s{display:none}.logo .t{font-size:19px}}
+main{padding:14px 0 40px}
+.grid{display:grid;grid-template-columns:minmax(0,1fr);gap:18px;margin-top:18px}.grid>*{min-width:0}
+@media(min-width:880px){.grid.two{grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr);align-items:start}.grid.wide{grid-template-columns:minmax(0,1.35fr) minmax(0,.65fr);align-items:start}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:20px;transition:background .3s,border-color .3s}
+.card h2{font-size:22px;display:flex;align-items:center;gap:10px}
+.card h2 .ico{width:38px;height:38px;border-radius:11px;background:var(--redsoft);color:var(--red);display:grid;place-items:center;flex:none}
+.sub{color:var(--muted);font-size:14px;margin-top:6px}
+.empty{padding:28px 12px;text-align:center;color:var(--muted);font-size:14px}
+.demo,.stale{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:14px;font-size:14px;margin-top:14px;background:var(--ambersoft);color:var(--amber);border:1px solid color-mix(in srgb,var(--amber) 30%,transparent)}
+.notice{display:flex;gap:10px;align-items:flex-start;padding:14px 16px;border-radius:16px;margin-top:14px;font-size:15px;font-weight:500;background:var(--chip);border:1px solid var(--line)}
+.notice.warn{background:var(--ambersoft);color:var(--amber);border-color:color-mix(in srgb,var(--amber) 35%,transparent)}
+.notice.info{background:color-mix(in srgb,var(--brand) 9%,var(--card));color:var(--ink)}
+
+/* ticket */
+.ticket{position:relative;border-radius:30px;color:#fff;background:linear-gradient(155deg,var(--tk1),var(--tk2));border:1px solid rgba(255,255,255,.08)}
+.tk-top{padding:24px 22px 18px}
+.tk-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.tk-date{font-size:14px;color:rgba(255,255,255,.72);font-weight:500}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:99px;font-size:12.5px;font-weight:700;background:rgba(255,255,255,.14)}
+.pill.up{background:var(--red);color:#fff}.pill.down{background:#12B57F;color:#04261b}.pill.warn{background:#FFD76A;color:#5b3a00}
+.tk-num{display:flex;align-items:baseline;gap:10px;margin-top:14px;font-family:var(--display);font-weight:800;letter-spacing:-.045em;font-variant-numeric:tabular-nums}
+.tk-num #bigNum{font-size:clamp(88px,26vw,132px);line-height:.9}
+.tk-num .cur{font-size:26px;font-weight:700;letter-spacing:0;color:rgba(255,255,255,.7)}
+.tk-sub{margin-top:8px;color:rgba(255,255,255,.75);font-size:15px}
+.tk-chg{display:inline-flex;align-items:center;gap:8px;margin-top:14px;padding:8px 14px;border-radius:14px;font-weight:700;font-size:15px;background:rgba(255,255,255,.12)}
+.tk-chg.up{background:var(--red)}.tk-chg.down{background:#12B57F;color:#04261b}
+.tk-chg small{font-weight:600;opacity:.85;font-size:13px}
+.tk-spark{display:block;width:100%;height:64px;margin-top:16px}
+.tk-note{margin-top:14px;padding:12px 14px;border-left:3px solid var(--red);background:rgba(255,255,255,.08);border-radius:0 12px 12px 0;font-size:14.5px;color:rgba(255,255,255,.92)}
+.tk-perf{position:relative;height:0;border-top:2px dashed rgba(255,255,255,.22);margin:0 22px}
+.tk-perf::before,.tk-perf::after{content:"";position:absolute;top:-14px;width:26px;height:26px;border-radius:50%;background:var(--bg);transition:background .3s}
+.tk-perf::before{left:-35px}.tk-perf::after{right:-35px}
+.tk-stub{display:grid;grid-template-columns:1fr 1fr;gap:16px 10px;padding:20px 22px 22px}
+@media(min-width:520px){.tk-stub{grid-template-columns:repeat(4,1fr)}}
+.tk-stub b{display:block;font:700 22px/1.1 var(--display);font-variant-numeric:tabular-nums}
+.tk-stub span{display:block;font-size:12.5px;color:rgba(255,255,255,.65);margin-top:4px}
+.tk-stub .up{color:#FF8A94}.tk-stub .down{color:#5CE3B4}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+
+/* calculator */
+.lbl{display:block;font-size:13px;font-weight:600;color:var(--muted);margin:18px 0 8px}
+.fld{display:flex;align-items:center;gap:10px;background:var(--chip);border:1.5px solid var(--line);border-radius:16px;padding:0 16px;transition:border-color .2s,background .2s}
+.fld:focus-within{border-color:var(--focus)}
+.fld input{flex:1;min-width:0;border:0;background:none;outline:0;font:700 28px/1 var(--display);padding:17px 0;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.fld span{font-weight:700;font-size:13px;color:var(--muted)}
+.fld.out{background:var(--redsoft);border-color:color-mix(in srgb,var(--red) 30%,transparent)}
+.fld.out input,.fld.out span{color:var(--red)}
+.link{display:flex;align-items:center;justify-content:center;gap:10px;margin:14px 0 -6px;flex-wrap:wrap}
+.rate-pill{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:99px;background:var(--redsoft);color:var(--red);font-weight:700;font-size:14px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.chip{padding:7px 14px;border-radius:99px;background:var(--chip);border:1px solid var(--line);font-weight:600;font-size:14px}
+.chip:active{transform:scale(.96)}
+.result{margin-top:16px;padding:14px 16px;border-radius:16px;background:var(--chip);display:flex;justify-content:space-between;align-items:center;gap:12px}
+.result p{font-size:14px;color:var(--muted)}
+.result b{display:block;color:var(--ink);font:700 18px/1.3 var(--display)}
+.custom{margin-top:14px;font-size:14px;color:var(--muted);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.custom input[type=text]{width:100px;padding:8px 10px;border-radius:10px;border:1.5px solid var(--line);background:var(--chip)}
+
+/* chart */
+.tabs{display:inline-flex;background:var(--chip);border-radius:14px;padding:4px;gap:2px;margin-top:16px;max-width:100%;overflow-x:auto}
+.tabs button{padding:8px 14px;border-radius:11px;font-weight:600;font-size:14px;color:var(--muted);white-space:nowrap}
+.tabs button[aria-selected=true]{background:var(--card);color:var(--ink);box-shadow:0 1px 0 var(--line)}
+.chart{position:relative;margin-top:14px;min-height:220px}
+.chart svg{display:block;touch-action:pan-y;user-select:none}
+.gl{stroke:var(--line);stroke-width:1;stroke-dasharray:3 5}
+.gt{fill:var(--muted);font:500 11.5px var(--body)}
+.tip{position:absolute;top:0;pointer-events:none;padding:8px 11px;border-radius:12px;background:var(--ink);color:var(--bg);font-size:13px;line-height:1.3;white-space:nowrap;opacity:0;transition:opacity .12s;transform:translateX(-50%)}
+.tip b{display:block;font:700 16px var(--display)}
+.chart-sum{margin-top:8px;font-size:14px;color:var(--muted)}
+.chart-sum b{color:var(--ink)}
+
+/* other rates */
+.rates{display:grid;gap:10px;margin-top:16px}
+.rate{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 14px;border-radius:16px;background:var(--chip)}
+.rate .n{font-weight:600}.rate .n small{display:block;color:var(--muted);font-weight:500;font-size:12.5px}
+.rate .v{font:700 20px var(--display);text-align:right;font-variant-numeric:tabular-nums}
+.delta{font:600 12.5px var(--body);display:block}
+.delta.up{color:var(--red)}.delta.down{color:var(--green)}.delta.flat{color:var(--muted)}
+
+/* history */
+.hist{margin-top:14px}
+.hrow{display:grid;grid-template-columns:78px 1fr auto;gap:10px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
+.hrow:first-child{border-top:0}
+.hrow .d{font-size:14px;color:var(--muted);font-weight:500}
+.hrow .v{font:700 18px var(--display);font-variant-numeric:tabular-nums}
+.hrow .nt{grid-column:2/4;font-size:13px;color:var(--muted);margin-top:-6px}
+
+/* channels / faq */
+.chan{display:grid;gap:10px;margin-top:14px}
+.chan a{display:flex;align-items:center;gap:12px;padding:14px;border-radius:16px;font-weight:600;background:var(--chip);text-decoration:none;color:inherit;border:1px solid var(--line)}
+.chan a svg{width:22px;height:22px}
+.faq details{border-top:1px solid var(--line)}
+.faq details:first-of-type{border-top:0;margin-top:8px}
+.faq summary{list-style:none;cursor:pointer;padding:15px 0;font-weight:600;display:flex;justify-content:space-between;gap:12px;align-items:center}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary .i{transition:transform .25s;color:var(--muted)}
+.faq details[open] summary .i{transform:rotate(180deg)}
+.faq details p{padding:0 0 16px;color:var(--muted);font-size:15px}
+footer{padding:26px 0 40px;color:var(--muted);font-size:13.5px}
+footer .row{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+footer a{color:inherit}
+.disc{max-width:60ch}
+
+/* toast */
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translate(-50%,30px);opacity:0;z-index:100;background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:14px;font-weight:600;font-size:14.5px;max-width:min(92vw,440px);text-align:center;transition:.25s;pointer-events:none}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+#toast.err{background:var(--red);color:#fff}
+
+/* admin */
+.back{position:fixed;inset:0;background:rgba(3,8,22,.6);z-index:40;opacity:0;pointer-events:none;transition:opacity .25s}
+.back.on{opacity:1;pointer-events:auto}
+.adm{position:fixed;z-index:41;inset:0;background:var(--bg);display:flex;flex-direction:column;transform:translateY(100%);visibility:hidden;transition:transform .35s cubic-bezier(.2,.8,.2,1),visibility .35s;padding-top:env(safe-area-inset-top)}
+.adm.on{transform:none;visibility:visible}
+@media(min-width:900px){.adm{inset:4vh 50% 4vh auto;left:auto;right:calc(50% - 450px);width:900px;border-radius:26px;border:1px solid var(--line);overflow:hidden}}
+.adm-h{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 18px;border-bottom:1px solid var(--line);background:var(--card)}
+.adm-h h2{font-size:20px}.adm-h small{display:block;color:var(--muted);font:500 12.5px var(--body);margin-top:3px}
+.adm-h small.on{color:var(--green)}
+.adm-tabs{display:flex;gap:4px;padding:10px 14px;overflow-x:auto;border-bottom:1px solid var(--line);background:var(--card)}
+.adm-tabs button{padding:9px 14px;border-radius:12px;font-weight:600;font-size:14.5px;color:var(--muted);white-space:nowrap;display:flex;align-items:center;gap:7px}
+.adm-tabs button[aria-selected=true]{background:var(--brand);color:#fff}
+[data-theme=dark] .adm-tabs button[aria-selected=true]{background:var(--chip);color:var(--ink)}
+.adm-b{flex:1;overflow:auto;padding:18px 16px calc(28px + env(safe-area-inset-bottom));-webkit-overflow-scrolling:touch}
+.box{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;margin-bottom:14px}
+.box h3{font-size:18px;margin-bottom:4px}
+.box label,.login label{display:block;font-size:13px;font-weight:600;color:var(--muted);margin-top:14px}
+.box input[type=text],.box input[type=date],.box input[type=url],.box textarea,.box select,.login input{display:block;width:100%;margin-top:6px;padding:12px 14px;border-radius:13px;border:1.5px solid var(--line);background:var(--chip);color:var(--ink);font-size:16px}
+.box textarea{min-height:84px;resize:vertical}
+.valbox{display:grid;grid-template-columns:auto 1fr auto;gap:8px;margin-top:8px;align-items:stretch}
+.valbox .st{display:flex;flex-direction:column;gap:6px}
+.valbox input{font:800 36px/1 var(--display)!important;text-align:center;margin-top:0!important;letter-spacing:-.03em}
+.valbox button{padding:8px 10px;border-radius:11px;background:var(--chip);border:1px solid var(--line);font-weight:700;font-size:14px;font-variant-numeric:tabular-nums;min-width:62px}
+.prev{margin-top:12px;padding:12px 14px;border-radius:14px;background:var(--chip);font-size:14px;color:var(--muted)}
+.prev b.up{color:var(--red)}.prev b.down{color:var(--green)}
+.row2{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.row2 .btn{flex:1 1 auto}
+.login{max-width:380px;margin:6vh auto 0;padding:26px;background:var(--card);border:1px solid var(--line);border-radius:22px}
+.login .lock{width:48px;height:48px;border-radius:14px;background:var(--redsoft);color:var(--red);display:grid;place-items:center;margin-bottom:14px}
+.login h2{font-size:24px}.login .btn{width:100%;margin-top:18px}
+.err{color:var(--red);font-size:14px;min-height:20px;margin-top:10px}
+.list .li{display:grid;grid-template-columns:82px 1fr auto;gap:10px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
+.list .li:first-child{border-top:0}
+.li .d{font-size:13.5px;color:var(--muted)}.li .v{font:700 18px var(--display)}.li .nt{font-weight:400;font-size:12.5px;color:var(--muted);display:block;font-family:var(--body);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:44vw}
+.icobtn{width:38px;height:38px;border-radius:11px;display:inline-grid;place-items:center;background:var(--chip);border:1px solid var(--line)}
+.rrow{display:grid;grid-template-columns:1.3fr .7fr 1fr auto;gap:8px;align-items:center;margin-top:10px}
+.rrow input{margin-top:0!important;padding:11px 12px!important}
+.rrow .ex{grid-column:1/-1;font-size:12px;color:var(--amber);margin-top:-4px}
+@media(max-width:480px){.rrow{grid-template-columns:1fr 1fr}.rrow .icobtn{justify-self:end}}
+.switch{display:flex;align-items:center;gap:10px;margin-top:14px;font-weight:600;font-size:15px}
+.switch input{width:22px;height:22px;accent-color:var(--red)}
+.bar{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:12px 14px;border-radius:14px;background:var(--ambersoft);color:var(--amber);font-size:14px;margin-bottom:14px;font-weight:500}
+.bar.ok{background:var(--greensoft);color:var(--green)}
+pre{margin:10px 0 0;padding:12px;border-radius:12px;background:var(--chip);overflow:auto;font-size:12.5px;line-height:1.5;border:1px solid var(--line)}
+ol.steps{padding-left:20px;margin:10px 0 0;color:var(--muted);font-size:14.5px}ol.steps li{margin-bottom:6px}
+ol.steps b{color:var(--ink)}
+details.g summary{cursor:pointer;font-weight:600;padding:8px 0}
+.hide{display:none!important}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+<symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2.5"/><path d="M8 11V7.5a4 4 0 0 1 8 0V11"/></symbol>
+<symbol id="i-up" viewBox="0 0 24 24"><path d="M7 17 17 7M8 7h9v9"/></symbol>
+<symbol id="i-down" viewBox="0 0 24 24"><path d="M7 7l10 10M17 8v9H8"/></symbol>
+<symbol id="i-flat" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+<symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2.5"/><path d="M5 15V6.5A2.5 2.5 0 0 1 7.5 4H16"/></symbol>
+<symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="1.6"/><path d="m4 18 5-5 4 4 3-3 4 4"/></symbol>
+<symbol id="i-chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+<symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+<symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></symbol>
+<symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16v4z"/></symbol>
+<symbol id="i-down-file" viewBox="0 0 24 24"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></symbol>
+<symbol id="i-up-file" viewBox="0 0 24 24"><path d="M12 16V5M7 9l5-4 5 4M5 20h14"/></symbol>
+<symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+<symbol id="i-share" viewBox="0 0 24 24"><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="m8.2 10.8 7.6-3.6M8.2 13.2l7.6 3.6"/></symbol>
+<symbol id="i-tg" viewBox="0 0 24 24"><path d="M21.5 4.5 2.8 11.7l5.6 2.1 2.2 5.7 3.1-3.9 4.9 3.6z"/><path d="m8.4 13.8 8.6-6.3"/></symbol>
+<symbol id="i-wa" viewBox="0 0 24 24"><path d="M4 20l1.4-4.3A8.2 8.2 0 1 1 8.5 19z"/><path d="M9.2 8.8c-.3 2.6 2.7 5.8 5.6 6l1.2-1.5-2.1-1.1-.9.9c-1-.4-1.9-1.3-2.3-2.3l.9-.9z"/></symbol>
+<symbol id="i-calc" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="3"/><path d="M8.5 7.5h7M8.5 12h.01M12 12h.01M15.5 12h.01M8.5 16h.01M12 16h.01M15.5 16h.01"/></symbol>
+<symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 4v16h16M8 15l3-4 3 3 5-7"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+<symbol id="i-coins" viewBox="0 0 24 24"><circle cx="9" cy="9" r="5.5"/><path d="M14.5 8.6A5.5 5.5 0 1 1 8.6 14.5M9 7v4M7.5 8.5h3"/></symbol>
+<symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15zM10 21h4"/></symbol>
+<symbol id="i-cog" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></symbol>
+<symbol id="i-list" viewBox="0 0 24 24"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></symbol>
+<symbol id="i-pen" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></symbol>
+<symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h3M16 8l4 4-4 4M20 12H9"/></symbol>
+</svg>
+
+<div class="stripe"></div>
+
+<header class="hdr">
+  <div class="wrap">
+    <div class="logo">
+      <div class="mark"><svg viewBox="0 0 24 24"><path d="m12 2.5 2.9 6.6 7.1.6-5.4 4.7 1.6 7-6.2-3.7-6.2 3.7 1.6-7L2 9.7l7.1-.6z"/></svg></div>
+      <div><span class="t" id="siteName">Saldo Cuba</span><span class="s" id="siteTag">Tasa del saldo en el mercado informal</span></div>
+    </div>
+    <div class="right">
+      <button class="theme" id="themeBtn" role="switch" aria-checked="false" aria-label="Cambiar entre modo claro y modo oscuro" title="Modo claro / oscuro">
+        <span class="stars"></span><span class="cloud"></span>
+        <span class="knob">
+          <svg class="sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.3"/><path d="M12 2.5v2.3M12 19.2v2.3M2.5 12h2.3M19.2 12h2.3M5.3 5.3 7 7M17 17l1.7 1.7M18.7 5.3 17 7M7 17l-1.7 1.7"/></svg>
+          <svg class="moon" viewBox="0 0 24 24"><path d="M20.5 14.6A8.6 8.6 0 0 1 9.4 3.5 8.6 8.6 0 1 0 20.5 14.6z"/></svg>
+        </span>
+      </button>
+      <button class="btn navy" data-act="admOpen" aria-haspopup="dialog"><svg class="i"><use href="#i-lock"/></svg><span>Admin</span></button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="status"><span class="dot"></span><b>Mercado informal · Cuba</b><span id="status">Cargando…</span></div>
+</div>
+
+<main class="wrap" id="app">
+  <div id="sBanners"></div>
+  <div class="grid two">
+    <div><section id="sHero" aria-live="polite"></section><div class="actions" id="sActions"></div></div>
+    <section class="card" id="sCalc"></section>
+  </div>
+  <div class="grid wide">
+    <section class="card" id="sChart"></section>
+    <div style="display:grid;gap:18px">
+      <section class="card" id="sRates"></section>
+      <section class="card" id="sChan"></section>
+    </div>
+  </div>
+  <div class="grid two">
+    <section class="card" id="sHist"></section>
+    <section class="card faq" id="sFaq"></section>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="row">
+      <p class="disc">Seguimiento independiente e informal del valor del saldo telefónico en Cuba. Es una referencia orientativa: este sitio no está afiliado a ETECSA ni a entidades gubernamentales.</p>
+      <p>© <span id="yr"></span> <span id="siteName2">Saldo Cuba</span>. Todos los derechos reservados.</p>
+    </div>
+  </div>
+</footer>
+
+<div class="back" id="back" data-act="admClose"></div>
+<section class="adm" id="adm" role="dialog" aria-modal="true" aria-label="Panel de administración"></section>
+<input type="file" id="fImport" accept="application/json,.json" class="hide">
+<div id="toast" role="status" aria-live="polite"></div>
+<noscript><p style="padding:20px;text-align:center">Activa JavaScript para ver la tasa del saldo.</p></noscript>
+
+<script>
+(()=>{'use strict';
+
+/* ═══════════ CONFIGURACIÓN ═══════════ */
+const CONFIG={
+  ADMIN_PASSWORD:'Htp6Ab@',           // Contraseña del panel (modo local)
+  SITE_URL:'',                      // Opcional: tu dominio final, ej. https://tasasaldo.com
+  FIREBASE:{apiKey:'',projectId:''} // Modo en línea (recomendado): pega aquí tus datos de Firebase
+};
+
+/* ═══════════ UTILIDADES ═══════════ */
+const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
+const p2=n=>String(n).padStart(2,'0'),round2=n=>Math.round(n*100)/100;
+const fmt=(v,d=2)=>Number(v).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+const n0=v=>fmt(v,Math.abs(v-Math.round(v))<.005?0:2);
+const sgn=(v,d=2)=>(v>0?'+':v<0?'−':'')+fmt(Math.abs(v),d);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ic=(n,c='')=>`<svg class="i ${c}" aria-hidden="true"><use href="#i-${n}"/></svg>`;
+const ymd=d=>d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate());
+const todayStr=()=>ymd(new Date());
+const addDays=(s,n)=>{const d=new Date(s+'T12:00:00');d.setDate(d.getDate()+n);return ymd(d)};
+const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
+const longDate=s=>cap(new Date(s+'T12:00:00').toLocaleDateString('es',{weekday:'long',day:'numeric',month:'long'}));
+const shortDate=s=>new Date(s+'T12:00:00').toLocaleDateString('es',{day:'numeric',month:'short'}).replace('.','');
+const timeStr=iso=>new Date(iso).toLocaleTimeString('es',{hour:'numeric',minute:'2-digit'});
+const parseNum=s=>parseFloat(String(s).replace(/\s/g,'').replace(',','.'))||0;
+const safeUrl=u=>/^https?:\/\//i.test(u||'')?u:'';
+const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const siteUrl=()=>CONFIG.SITE_URL||(/^https?:/.test(location.href)?location.href.split('#')[0].split('?')[0]:'');
+
+let toastT;
+function toast(m,err){const t=$('#toast');t.textContent=m;t.className='on'+(err?' err':'');clearTimeout(toastT);toastT=setTimeout(()=>t.className='',err?5200:3600)}
+async function copy(txt,msg='Copiado'){try{await navigator.clipboard.writeText(txt)}catch(e){const a=document.createElement('textarea');a.value=txt;document.body.appendChild(a);a.select();try{document.execCommand('copy')}catch(_){}a.remove()}toast(msg)}
+
+/* ═══════════ DATOS ═══════════ */
+const LS='tsc_draft_v1',ONLINE=!!(CONFIG.FIREBASE.apiKey&&CONFIG.FIREBASE.projectId);
+let data,adminOpen=false,tab='pub',range=7,histLimit=14,pubDraft=null,animated=false;
+const calc={saldo:'100',cup:'',custom:false,rate:''};
+
+function defaults(){return{rev:0,demo:false,settings:{site:'Saldo Cuba',tagline:'Tasa del saldo en el mercado informal',telegram:'',whatsapp:''},notice:{active:false,type:'info',text:''},history:[],rates:[]}}
+function demoData(){
+  const today=todayStr();let seed=11;const rnd=()=>(seed=seed*16807%2147483647)/2147483647;
+  const last=[2.5,2.8,3.1,3.35,3.5,3.65,3.8],early=[];let v=2.5;
+  for(let i=0;i<83;i++){v=Math.min(4.4,Math.max(1.9,v+(rnd()-.47)*.17));early.unshift(round2(v))}
+  const vals=early.concat(last),hist=vals.map((x,i)=>({d:addDays(today,i-(vals.length-1)),v:x,note:''}));
+  hist[hist.length-1].note='Buena demanda esta tarde. La tasa se mantiene firme.';hist[hist.length-1].t=new Date().toISOString();
+  return{...defaults(),demo:true,history:hist,rates:[
+    {id:'r1',name:'Dólar',sym:'USD',value:410,prev:405,ex:true},
+    {id:'r2',name:'Euro',sym:'EUR',value:440,prev:441,ex:true},
+    {id:'r3',name:'MLC',sym:'MLC',value:200,prev:200,ex:true},
+    {id:'r4',name:'USDT',sym:'USDT',value:412,prev:410,ex:true}]};
+}
+const valid=j=>j&&Array.isArray(j.history);
+function normalize(d){const b=defaults();d.settings={...b.settings,...(d.settings||{})};d.notice={...b.notice,...(d.notice||{})};d.rates=Array.isArray(d.rates)?d.rates:[];d.history=d.history.filter(x=>x&&x.d&&isFinite(x.v)).sort((a,b)=>a.d<b.d?-1:1);return d}
+
+/* Firebase (REST, sin librerías) */
+const FB=CONFIG.FIREBASE;
+const docUrl=`https://firestore.googleapis.com/v1/projects/${FB.projectId}/databases/(default)/documents/site/data`;
+let sess=null;try{sess=JSON.parse(sessionStorage.getItem('tsc_fb')||'null')}catch(e){}
+async function fbLoad(){const r=await fetch(docUrl+'?key='+FB.apiKey,{cache:'no-store'});if(!r.ok)throw new Error(r.status);const j=await r.json();return JSON.parse(j.fields.json.stringValue)}
+async function fbLogin(email,password){
+  const r=await fetch('https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key='+FB.apiKey,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password,returnSecureToken:true})});
+  const j=await r.json();if(!r.ok)throw new Error(j.error?.message||'ERROR');
+  sess={token:j.idToken,refresh:j.refreshToken,exp:Date.now()+(+j.expiresIn-90)*1000,email};sessionStorage.setItem('tsc_fb',JSON.stringify(sess));
+}
+async function fbToken(){
+  if(!sess)throw new Error('NO_SESSION');
+  if(Date.now()<sess.exp)return sess.token;
+  const r=await fetch('https://securetoken.googleapis.com/v1/token?key='+FB.apiKey,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'grant_type=refresh_token&refresh_token='+encodeURIComponent(sess.refresh)});
+  const j=await r.json();if(!r.ok){logout(true);throw new Error('NO_SESSION')}
+  sess.token=j.id_token;sess.refresh=j.refresh_token;sess.exp=Date.now()+(+j.expires_in-90)*1000;sessionStorage.setItem('tsc_fb',JSON.stringify(sess));return sess.token;
+}
+async function fbSave(obj){
+  const tk=await fbToken();
+  const r=await fetch(docUrl+'?key='+FB.apiKey+'&updateMask.fieldPaths=json',{method:'PATCH',headers:{'Content-Type':'application/json',Authorization:'Bearer '+tk},body:JSON.stringify({fields:{json:{stringValue:JSON.stringify(obj)}}})});
+  if(!r.ok){const j=await r.json().catch(()=>({}));throw new Error(j.error?.status||r.status)}
+}
+const isAdmin=()=>ONLINE?!!sess:sessionStorage.getItem('tsc_admin')==='1';
+function logout(silent){sess=null;sessionStorage.removeItem('tsc_fb');sessionStorage.removeItem('tsc_admin');if(!silent){toast('Sesión cerrada');}renderAdmin()}
+
+async function loadData(){
+  let d=null;
+  if(ONLINE){try{d=await fbLoad()}catch(e){}}
+  if(!d){try{const r=await fetch('data.json?v='+Date.now(),{cache:'no-store'});if(r.ok){const j=await r.json();if(valid(j))d=j}}catch(e){}}
+  if(!ONLINE){try{const dr=JSON.parse(localStorage.getItem(LS));if(valid(dr)&&(!d||(dr.rev||0)>(d.rev||0)))d=dr}catch(e){}}
+  data=normalize(d||demoData());
+}
+const isDirty=()=>!ONLINE&&localStorage.getItem('tsc_dirty')==='1';
+async function commit(msg){
+  data.rev=Date.now();
+  try{
+    if(ONLINE){await fbSave(data);toast(msg+' · ya es visible para todos')}
+    else{localStorage.setItem(LS,JSON.stringify(data));localStorage.setItem('tsc_dirty','1');toast(msg+'. Descarga data.json para publicarlo.')}
+  }catch(e){
+    const m=String(e.message||e);
+    toast(m==='NO_SESSION'?'Tu sesión venció. Entra de nuevo.':(/PERMISSION|403/.test(m)?'Firebase rechazó el cambio: revisa las reglas y el correo admin.':'No se pudo guardar. Revisa tu conexión.'),true);
+    if(m==='NO_SESSION')renderAdmin();return false;
+  }
+  renderAll();return true;
+}
+
+/* ═══════════ CÁLCULOS ═══════════ */
+function stats(){
+  const h=data.history;if(!h.length)return null;
+  const cur=h[h.length-1],prev=h[h.length-2]||null,win=h.slice(-30).map(x=>x.v);
+  const avg=win.reduce((a,b)=>a+b,0)/win.length,d=prev?cur.v-prev.v:0,pct=prev&&prev.v?d/prev.v*100:0;
+  const ref=h[Math.max(0,h.length-8)],tr=cur.v-ref.v;
+  return{cur,prev,d,pct,avg,min:Math.min(...win),max:Math.max(...win),trend:tr>.02?'up':tr<-.02?'down':'flat'};
+}
+const dirOf=d=>d>.004?'up':d<-.004?'down':'flat';
+const curRate=()=>{const S=stats();return calc.custom&&parseNum(calc.rate)>0?parseNum(calc.rate):(S?S.cur.v:0)};
+
+function smooth(P){
+  if(P.length<3)return P.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join('');
+  let d=`M${P[0][0].toFixed(1)} ${P[0][1].toFixed(1)}`;const t=.18;
+  for(let i=0;i<P.length-1;i++){
+    const p0=P[i-1]||P[i],p1=P[i],p2_=P[i+1],p3=P[i+2]||p2_,lo=Math.min(p1[1],p2_[1]),hi=Math.max(p1[1],p2_[1]);
+    const c1y=Math.min(hi,Math.max(lo,p1[1]+(p2_[1]-p0[1])*t)),c2y=Math.min(hi,Math.max(lo,p2_[1]-(p3[1]-p1[1])*t));
+    d+=` C${(p1[0]+(p2_[0]-p0[0])*t).toFixed(1)} ${c1y.toFixed(1)} ${(p2_[0]-(p3[0]-p1[0])*t).toFixed(1)} ${c2y.toFixed(1)} ${p2_[0].toFixed(1)} ${p2_[1].toFixed(1)}`;
+  }
+  return d;
+}
+
+/* ═══════════ RENDER PÚBLICO ═══════════ */
+function renderStatus(){
+  const S=stats();let t='Sin datos todavía';
+  if(S){const c=S.cur,day=c.d===todayStr()?'hoy':c.d===addDays(todayStr(),-1)?'ayer':shortDate(c.d);t=`Actualizado ${day}${c.t?', '+timeStr(c.t):''}`}
+  $('#status').textContent=t;
+  const s=data.settings;$('#siteName').textContent=s.site;$('#siteName2').textContent=s.site;$('#siteTag').textContent=s.tagline;
+  document.title=(S?`${fmt(S.cur.v)} CUP · `:'')+`Tasa del saldo hoy — ${s.site}`;
+}
+function renderBanners(){
+  let h='';
+  if(data.demo)h+=`<div class="demo">${ic('info')}<span><b>Vista previa con datos de ejemplo.</b> Entra a <b>Admin</b> y publica tu primera tasa: los datos de ejemplo se borrarán solos.</span></div>`;
+  const n=data.notice;if(n.active&&n.text.trim())h+=`<div class="notice ${n.type==='warn'?'warn':'info'}">${ic(n.type==='warn'?'bell':'info')}<span>${esc(n.text)}</span></div>`;
+  const S=stats();if(S&&!data.demo&&S.cur.d!==todayStr())h+=`<div class="stale">${ic('info')}<span>Todavía no hay tasa publicada hoy. Mostramos la última: ${esc(longDate(S.cur.d).toLowerCase())}.</span></div>`;
+  $('#sBanners').innerHTML=h;
+}
+function renderHero(){
+  const S=stats(),el=$('#sHero');
+  if(!S){el.innerHTML=`<div class="ticket"><div class="tk-top"><p class="tk-date">Aún no hay tasa publicada</p><p class="tk-sub" style="margin-top:12px">Vuelve en un rato: la tasa del día aparecerá aquí.</p></div></div>`;$('#sActions').innerHTML='';return}
+  const {cur,prev,d,pct,avg,min,max,trend}=S,dir=dirOf(d),isToday=cur.d===todayStr();
+  const vsTxt=prev&&prev.d===addDays(cur.d,-1)?'ayer':'la tasa anterior';
+  const pts=data.history.slice(-14),vs=pts.map(p=>p.v),lo=Math.min(...vs),hi=Math.max(...vs),rg=(hi-lo)||1;
+  const P=pts.map((p,i)=>[i/(Math.max(1,pts.length-1))*300,54-((p.v-lo)/rg)*46]);
+  const spark=pts.length>1?`<svg class="tk-spark" viewBox="0 0 300 60" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="sg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".28"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient></defs><path d="${smooth(P)} L300 60 L0 60Z" fill="url(#sg)"/><path d="${smooth(P)}" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>`:'';
+  const tag=dir==='up'?['up','En alza']:dir==='down'?['down','A la baja']:['','Estable'];
+  const tl={up:'Subiendo',down:'Bajando',flat:'Estable'}[trend];
+  el.innerHTML=`<article class="ticket">
+    <div class="tk-top">
+      <div class="tk-head"><span class="tk-date">${isToday?'Hoy · ':''}${esc(longDate(cur.d))}</span>${isToday?`<span class="pill ${tag[0]}">${tag[1]}</span>`:`<span class="pill warn">Sin actualizar hoy</span>`}</div>
+      <div class="tk-num"><span id="bigNum">${fmt(cur.v)}</span><span class="cur">CUP</span></div>
+      <p class="tk-sub">por cada 1 de saldo móvil ETECSA</p>
+      ${prev?`<div class="tk-chg ${dir}">${ic(dir==='up'?'up':dir==='down'?'down':'flat')}${sgn(d)} frente a ${vsTxt} <small>${sgn(pct,1)}%</small></div>`:''}
+      ${spark}
+      ${cur.note?`<p class="tk-note">${esc(cur.note)}</p>`:''}
+    </div>
+    <div class="tk-perf"></div>
+    <div class="tk-stub">
+      <div><b>${fmt(avg)}</b><span>Promedio 30 días</span></div>
+      <div><b>${fmt(min)}</b><span>Mínimo 30 días</span></div>
+      <div><b>${fmt(max)}</b><span>Máximo 30 días</span></div>
+      <div><b class="${trend}">${tl}</b><span>Tendencia 7 días</span></div>
+    </div></article>`;
+  $('#sActions').innerHTML=`<button class="btn" data-act="shareWA">${ic('wa')}WhatsApp</button><button class="btn" data-act="shareTG">${ic('tg')}Telegram</button><button class="btn" data-act="shareImg">${ic('image')}Imagen</button><button class="btn" data-act="copyText">${ic('copy')}Copiar</button>`;
+  if(!animated){animated=true;const b=$('#bigNum');if(!reduced&&prev){const from=prev.v,to=cur.v,t0=performance.now();const f=t=>{const k=Math.min(1,(t-t0)/900),e=1-Math.pow(1-k,3);b.textContent=fmt(from+(to-from)*e);if(k<1)requestAnimationFrame(f)};requestAnimationFrame(f)}}
+}
+function renderCalc(){
+  const S=stats();
+  $('#sCalc').innerHTML=`<h2><span class="ico">${ic('calc')}</span>Calculadora de saldo</h2>
+  <p class="sub">Escribe en cualquiera de los dos campos y se convierte al instante.</p>
+  <label class="lbl" for="cSaldo">Cantidad de saldo</label>
+  <div class="fld"><input id="cSaldo" inputmode="decimal" autocomplete="off" value="${esc(calc.saldo)}"><span>SALDO</span></div>
+  <div class="link"><span class="rate-pill" id="ratePill"></span></div>
+  <label class="lbl" for="cCup">Equivale a (pesos cubanos)</label>
+  <div class="fld out"><input id="cCup" inputmode="decimal" autocomplete="off"><span>CUP</span></div>
+  <div class="chips">${[100,250,500,1000].map(n=>`<button class="chip" data-act="quick" data-v="${n}">${fmt(n,0)}</button>`).join('')}</div>
+  <div class="result"><div><p>Resultado</p><b id="calcRes"></b></div><button class="btn sm" data-act="copyCalc">${ic('copy')}Copiar</button></div>
+  <div class="custom"><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="cCustom" ${calc.custom?'checked':''}>Usar otra tasa</label>
+  <input type="text" id="cRate" inputmode="decimal" placeholder="${S?fmt(S.cur.v):'0.00'}" value="${esc(calc.rate)}" class="${calc.custom?'':'hide'}" aria-label="Tasa personalizada"></div>`;
+  recalc('saldo');
+}
+function recalc(from){
+  const r=curRate(),sa=$('#cSaldo'),cu=$('#cCup');if(!sa||!cu)return;
+  let s,c;
+  if(from==='cup'){c=parseNum(cu.value);s=r?c/r:0;calc.cup=cu.value;sa.value=s?String(round2(s)):'';calc.saldo=sa.value}
+  else{s=parseNum(sa.value);calc.saldo=sa.value;c=s*r;cu.value=c?String(round2(c)):'';calc.cup=cu.value}
+  $('#ratePill').innerHTML=`× ${fmt(r)} CUP`;
+  $('#calcRes').textContent=r?`${n0(s)} de saldo = ${n0(c)} CUP`:'Aún no hay tasa';
+}
+function drawChart(){
+  const el=$('#chart');if(!el)return;
+  const pts=data.history.slice(-range),sum=$('#chartSum');
+  if(pts.length<2){el.innerHTML='<div class="empty">Aún no hay suficientes datos para dibujar la gráfica.</div>';sum.textContent='';return}
+  const W=Math.max(280,el.clientWidth),H=Math.max(220,Math.min(300,Math.round(W*.6))),L=42,R=12,T=14,B=28,n=pts.length;
+  const vs=pts.map(p=>p.v);let lo=Math.min(...vs),hi=Math.max(...vs);const pad=(hi-lo)*.18||.4;lo=Math.max(0,lo-pad);hi+=pad;
+  const X=i=>L+(W-L-R)*i/(n-1),Y=v=>T+(H-T-B)*(1-(v-lo)/(hi-lo)),P=pts.map((p,i)=>[X(i),Y(p.v)]),line=smooth(P);
+  let g='';for(let k=0;k<5;k++){const v=lo+(hi-lo)*k/4,y=Y(v);g+=`<line class="gl" x1="${L}" x2="${W-R}" y1="${y}" y2="${y}"/><text class="gt" x="${L-8}" y="${y+4}" text-anchor="end">${v.toFixed(2)}</text>`}
+  const step=range<=7?1:Math.ceil((n-1)/5),wd=['dom','lun','mar','mié','jue','vie','sáb'];
+  for(let i=n-1;i>=0;i-=step){
+    const dt=pts[i].d,lab=range<=7?(i===n-1?'hoy':wd[new Date(dt+'T12:00:00').getDay()]):shortDate(dt),x=X(i),an=i===0||x<L+18?'start':(i===n-1?'end':'middle');
+    g+=`<text class="gt" x="${x}" y="${H-8}" text-anchor="${an}">${lab}</text>`;
+  }
+  const imax=vs.indexOf(Math.max(...vs)),imin=vs.indexOf(Math.min(...vs)),mk=(i,up)=>i===n-1?'':`<circle cx="${X(i)}" cy="${Y(vs[i])}" r="3.5" fill="var(--card)" stroke="var(--muted)" stroke-width="1.6"/><text class="gt" x="${X(i)}" y="${Y(vs[i])+(up?-9:17)}" text-anchor="${X(i)<L+20?'start':X(i)>W-R-20?'end':'middle'}" style="fill:var(--ink);font-weight:600">${fmt(vs[i])}</text>`;
+  const uid='ga'+Math.random().toString(36).slice(2,6);
+  el.innerHTML=`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Gráfica de la tasa del saldo en los últimos ${n} días">
+   <defs><linearGradient id="${uid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--red)" stop-opacity=".28"/><stop offset="1" stop-color="var(--red)" stop-opacity="0"/></linearGradient></defs>${g}
+   <path d="${line} L${X(n-1)} ${H-B} L${X(0)} ${H-B}Z" fill="url(#${uid})"/><path d="${line}" fill="none" stroke="var(--red)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+   ${n>2?mk(imax,true)+(imin!==imax?mk(imin,false):''):''}
+   <circle cx="${X(n-1)}" cy="${Y(vs[n-1])}" r="9" fill="var(--red)" opacity=".18"/><circle cx="${X(n-1)}" cy="${Y(vs[n-1])}" r="5" fill="var(--red)" stroke="var(--card)" stroke-width="2"/>
+   <line id="cx" y1="${T}" y2="${H-B}" stroke="var(--muted)" stroke-width="1" opacity="0"/><circle id="cd" r="6" fill="var(--card)" stroke="var(--red)" stroke-width="3" opacity="0"/>
+  </svg><div class="tip" id="tip"></div>`;
+  const svg=el.firstElementChild,tip=$('#tip'),cx=$('#cx'),cd=$('#cd');
+  const move=ev=>{const r=svg.getBoundingClientRect(),i=Math.max(0,Math.min(n-1,Math.round((ev.clientX-r.left-L)/(W-L-R)*(n-1)))),p=pts[i],x=X(i),dd=i?p.v-pts[i-1].v:null;
+    cx.setAttribute('x1',x);cx.setAttribute('x2',x);cx.setAttribute('opacity',1);cd.setAttribute('cx',x);cd.setAttribute('cy',Y(p.v));cd.setAttribute('opacity',1);
+    tip.innerHTML=`${esc(cap(shortDate(p.d)))}<b>${fmt(p.v)} CUP</b>${dd!==null?`<span style="opacity:.75">${sgn(dd)} vs día anterior</span>`:''}`;
+    tip.style.left=Math.max(64,Math.min(W-64,x))+'px';tip.style.opacity=1};
+  const out=()=>{cx.setAttribute('opacity',0);cd.setAttribute('opacity',0);tip.style.opacity=0};
+  svg.addEventListener('pointermove',move);svg.addEventListener('pointerdown',move);svg.addEventListener('pointerleave',out);
+  const dv=pts[n-1].v-pts[0].v,pc=pts[0].v?dv/pts[0].v*100:0;
+  sum.innerHTML=`En ${n} ${n===1?'día':'días'}: <b>${sgn(dv)} CUP</b> (${sgn(pc,1)}%)`;
+}
+function renderChart(){
+  $('#sChart').innerHTML=`<h2><span class="ico">${ic('chart')}</span>Evolución del saldo</h2>
+  <p class="sub">Toca o desliza sobre la gráfica para ver cada día.</p>
+  <div class="tabs" role="tablist">${[7,30,90].map(r=>`<button role="tab" data-act="range" data-r="${r}" aria-selected="${r===range}">${r} días</button>`).join('')}</div>
+  <div class="chart" id="chart"></div><p class="chart-sum" id="chartSum"></p>`;
+  drawChart();
+}
+function renderRates(){
+  const rs=data.rates.filter(r=>data.demo||!r.ex),el=$('#sRates');
+  if(!rs.length){el.classList.add('hide');return}el.classList.remove('hide');
+  el.innerHTML=`<h2><span class="ico">${ic('coins')}</span>Otras tasas</h2><p class="sub">Referencia del mercado informal, en CUP.</p>
+  <div class="rates">${rs.map(r=>{const d=r.prev!=null?r.value-r.prev:0,dr=dirOf(d);return`<div class="rate"><div class="n">${esc(r.name)}<small>${esc(r.sym)}</small></div><div class="v">${n0(r.value)}<span class="delta ${dr}">${dr==='flat'?'Sin cambio':sgn(d,d%1?2:0)}</span></div></div>`}).join('')}</div>`;
+}
+function renderChan(){
+  const s=data.settings,tg=safeUrl(s.telegram),wa=safeUrl(s.whatsapp),el=$('#sChan');
+  if(!tg&&!wa){el.classList.add('hide');return}el.classList.remove('hide');
+  el.innerHTML=`<h2><span class="ico">${ic('bell')}</span>Recibe la tasa</h2><p class="sub">Entra al canal y te llega cada actualización.</p><div class="chan">${tg?`<a href="${esc(tg)}" target="_blank" rel="noopener">${ic('tg')}Canal de Telegram</a>`:''}${wa?`<a href="${esc(wa)}" target="_blank" rel="noopener">${ic('wa')}Canal de WhatsApp</a>`:''}</div>`;
+}
+function renderHist(){
+  const h=data.history,rows=[];
+  for(let i=h.length-1;i>=Math.max(0,h.length-histLimit);i--){
+    const c=h[i],p=h[i-1],d=p?c.v-p.v:null,dr=d===null?'flat':dirOf(d);
+    rows.push(`<div class="hrow"><span class="d">${esc(cap(shortDate(c.d)))}</span><span class="v">${fmt(c.v)}</span><span class="delta ${dr}">${d===null?'—':dr==='flat'?'Sin cambio':sgn(d)}</span>${c.note?`<span class="nt">${esc(c.note)}</span>`:''}</div>`);
+  }
+  $('#sHist').innerHTML=`<h2><span class="ico">${ic('list')}</span>Historial</h2><p class="sub">Las tasas publicadas más recientes.</p>
+  <div class="hist">${rows.join('')||'<div class="empty">Todavía no hay tasas publicadas.</div>'}</div>
+  ${h.length>histLimit?`<div class="row2"><button class="btn" data-act="moreHist">Ver más días</button></div>`:''}`;
+}
+const FAQ=[
+ ['¿Qué significa la tasa del saldo?','Es cuántos pesos cubanos (CUP) se pagan en el mercado informal por cada 1 de saldo móvil de ETECSA. Si la tasa es 3.80, 100 de saldo equivalen a 380 CUP.'],
+ ['¿Cada cuánto se actualiza?','Normalmente una vez al día. La hora de la última actualización aparece arriba. Si ves el aviso “Sin actualizar hoy”, estás viendo la tasa más reciente publicada.'],
+ ['¿De dónde salen los datos?','Del seguimiento independiente del mercado informal. Es una referencia orientativa: el precio real de cada operación puede variar.'],
+ ['¿Es una tasa oficial?','No. Este sitio no está afiliado a ETECSA ni a ninguna entidad gubernamental.'],
+ ['¿Cómo uso la calculadora?','Escribe la cantidad en el campo de saldo o en el de CUP y el otro se llena solo. También puedes marcar “Usar otra tasa” para simular un precio distinto.'],
+ ['¿Puedo compartir la tasa del día?','Sí. Usa los botones de WhatsApp o Telegram, copia el texto o descarga la imagen del día para subirla a tus estados.']];
+function renderFaq(){$('#sFaq').innerHTML=`<h2><span class="ico">${ic('info')}</span>Preguntas frecuentes</h2>${FAQ.map(([q,a])=>`<details><summary>${q}${ic('chev')}</summary><p>${a}</p></details>`).join('')}`}
+
+function renderAll(){renderStatus();renderBanners();renderHero();renderCalc();renderChart();renderRates();renderChan();renderHist();if(adminOpen)renderAdmin()}
+
+/* ═══════════ COMPARTIR ═══════════ */
+function shareText(){
+  const S=stats();if(!S)return'';const a=S.d>0?'▲':S.d<0?'▼':'•';
+  return`📱 Tasa del saldo en Cuba\n${longDate(S.cur.d)}\n\n1 de saldo = ${fmt(S.cur.v)} CUP ${S.prev?a+' '+sgn(S.d):''}\n${S.cur.note?'\n'+S.cur.note+'\n':''}\n${siteUrl()}`.trim();
+}
+function rr(g,x,y,w,h,r){g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath()}
+function star(g,cx,cy,R){g.beginPath();for(let i=0;i<10;i++){const r=i%2?R*.4:R,a=-Math.PI/2+i*Math.PI/5;g.lineTo(cx+r*Math.cos(a),cy+r*Math.sin(a))}g.closePath();g.fill()}
+async function makeImage(){
+  const S=stats();if(!S)return null;try{await document.fonts.ready}catch(e){}
+  const W=1080,H=1350,c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d'),F="'Bricolage Grotesque','Figtree',system-ui,sans-serif";
+  let gr=g.createLinearGradient(0,0,W*.4,H);gr.addColorStop(0,'#14409F');gr.addColorStop(1,'#050F2B');g.fillStyle=gr;g.fillRect(0,0,W,H);
+  gr=g.createRadialGradient(W*.9,H*.12,10,W*.9,H*.12,560);gr.addColorStop(0,'rgba(224,48,63,.5)');gr.addColorStop(1,'rgba(224,48,63,0)');g.fillStyle=gr;g.fillRect(0,0,W,H);
+  g.fillStyle='#E0303F';rr(g,80,80,88,88,24);g.fill();g.fillStyle='#fff';star(g,124,126,32);
+  g.textBaseline='alphabetic';g.font=`700 46px ${F}`;g.fillText(data.settings.site,190,138);
+  g.fillStyle='rgba(255,255,255,.72)';g.font=`500 40px ${F}`;g.fillText(longDate(S.cur.d),80,290);
+  g.fillStyle='#fff';g.font=`700 68px ${F}`;g.fillText('Tasa del saldo en Cuba',80,380);
+  g.font=`800 360px ${F}`;const num=fmt(S.cur.v);g.fillText(num,70,740);const wN=g.measureText(num).width;
+  g.font=`700 84px ${F}`;g.fillStyle='rgba(255,255,255,.7)';g.fillText('CUP',80+wN+24,740);
+  g.font=`500 44px ${F}`;g.fillText('por cada 1 de saldo móvil',80,815);
+  if(S.prev){const dr=dirOf(S.d),tx=`${dr==='up'?'▲':dr==='down'?'▼':'•'} ${sgn(S.d)}  ·  ${sgn(S.pct,1)}%`;g.font=`700 44px ${F}`;const w=g.measureText(tx).width+64;g.fillStyle=dr==='down'?'#12B57F':dr==='up'?'#E0303F':'rgba(255,255,255,.18)';rr(g,80,860,w,88,44);g.fill();g.fillStyle=dr==='down'?'#04261b':'#fff';g.fillText(tx,112,919)}
+  const pts=data.history.slice(-14),vs=pts.map(p=>p.v),lo=Math.min(...vs),hi=Math.max(...vs),rg=(hi-lo)||1;
+  if(pts.length>1){const P=pts.map((p,i)=>[80+i*(920/(pts.length-1)),1235-((p.v-lo)/rg)*200]);g.beginPath();P.forEach((p,i)=>i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]));g.strokeStyle='#fff';g.lineWidth=8;g.lineJoin='round';g.lineCap='round';g.stroke();g.lineTo(1000,1260);g.lineTo(80,1260);g.closePath();const ag=g.createLinearGradient(0,1030,0,1260);ag.addColorStop(0,'rgba(255,255,255,.22)');ag.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=ag;g.fill();g.beginPath();g.arc(P[P.length-1][0],P[P.length-1][1],14,0,7);g.fillStyle='#E0303F';g.fill();g.lineWidth=5;g.strokeStyle='#fff';g.stroke()}
+  g.fillStyle='rgba(255,255,255,.6)';g.font=`500 32px ${F}`;g.fillText('Últimos 14 días · referencia informal, no oficial',80,1312);
+  return new Promise(res=>c.toBlob(res,'image/png'));
+}
+async function shareImage(){
+  const b=await makeImage();if(!b)return toast('Publica una tasa primero',true);
+  const f=new File([b],`tasa-saldo-${todayStr()}.png`,{type:'image/png'});
+  try{if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:'Tasa del saldo en Cuba'});return}}catch(e){if(e.name==='AbortError')return}
+  const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=f.name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000);toast('Imagen descargada');
+}
+
+/* ═══════════ ADMIN ═══════════ */
+const TABS=[['pub','pen','Publicar'],['hist','list','Historial'],['rates','coins','Otras tasas'],['notice','bell','Avisos'],['set','cog','Ajustes']];
+function loginView(){return`<div class="adm-h"><div><h2>Panel de administración</h2><small>Acceso privado</small></div><button class="icobtn" data-act="admClose" aria-label="Cerrar">${ic('close')}</button></div>
+<div class="adm-b"><form class="login" id="loginForm"><div class="lock">${ic('lock')}</div><h2>Acceso de administrador</h2><p class="sub">${ONLINE?'Entra con tu correo y contraseña de Firebase.':'Escribe la contraseña del panel.'}</p>
+${ONLINE?'<label>Correo<input type="email" id="lEmail" autocomplete="username" required></label>':''}
+<label>Contraseña<input type="password" id="lPass" autocomplete="current-password" required></label><p class="err" id="lErr" role="alert"></p>
+<button class="btn primary" type="submit">Entrar</button></form></div>`}
+function pubDefaults(){const S=stats(),d=pubDraft?.d||todayStr(),ex=data.history.find(x=>x.d===d),real=!data.demo;const v=pubDraft?.v??ex?.v??S?.cur.v;return{d,v:v!==undefined&&v!==''?Number(v).toFixed(2):'',note:pubDraft?.note??(real?ex?.note:'')??'',editing:!!ex&&real}}
+function tabPub(){
+  const p=pubDefaults();
+  return`${isDirty()?`<div class="bar"><span>Tienes cambios sin subir al hosting.</span><button class="btn sm primary" data-act="export">${ic('down-file')}Descargar data.json</button></div>`:''}
+  <div class="box"><h3>${p.editing?'Editar tasa':'Publicar tasa del día'}</h3><p class="sub">${p.editing?'Ya existe una tasa en esta fecha; al publicar se reemplaza.':'Es lo único que necesitas hacer cada día.'}</p>
+  <label for="pDate">Fecha</label><input type="date" id="pDate" value="${p.d}">
+  <label for="pVal">Tasa (CUP por cada 1 de saldo)</label>
+  <div class="valbox"><div class="st"><button type="button" data-act="step" data-v="-0.1">−0.10</button><button type="button" data-act="step" data-v="-0.05">−0.05</button></div>
+  <input type="text" id="pVal" inputmode="decimal" value="${esc(p.v)}" placeholder="0.00" aria-label="Tasa"><div class="st"><button type="button" data-act="step" data-v="0.1">+0.10</button><button type="button" data-act="step" data-v="0.05">+0.05</button></div></div>
+  <div class="prev" id="pPrev"></div>
+  <label for="pNote">Nota del día (opcional)</label><textarea id="pNote" maxlength="180" placeholder="Ej.: Mucha demanda por la tarde. Se espera estabilidad.">${esc(p.note)}</textarea>
+  <div class="row2"><button class="btn primary" data-act="publish">${ic('check')}${p.editing?'Guardar cambios':'Publicar tasa'}</button></div></div>
+  <div class="box"><h3>Compartir la tasa de hoy</h3><p class="sub">Publica primero y luego envíala a tus grupos.</p>
+  <div class="row2"><button class="btn" data-act="shareWA">${ic('wa')}WhatsApp</button><button class="btn" data-act="shareTG">${ic('tg')}Telegram</button><button class="btn" data-act="shareImg">${ic('image')}Imagen</button><button class="btn" data-act="copyText">${ic('copy')}Copiar</button></div></div>`;
+}
+function tabHist(){
+  const h=[...data.history].reverse();
+  return`<div class="box"><h3>Historial de tasas</h3><p class="sub">${h.length} ${h.length===1?'registro':'registros'}. Toca el lápiz para corregir una tasa.</p>
+  <div class="list">${h.slice(0,120).map(x=>`<div class="li"><span class="d">${esc(cap(shortDate(x.d)))}</span><span class="v">${fmt(x.v)}${x.note?`<span class="nt">${esc(x.note)}</span>`:''}</span><span><button class="icobtn" data-act="edit" data-d="${x.d}" aria-label="Editar">${ic('edit')}</button> <button class="icobtn" data-act="del" data-d="${x.d}" aria-label="Eliminar">${ic('trash')}</button></span></div>`).join('')||'<div class="empty">Aún no hay tasas.</div>'}</div></div>
+  <div class="box"><h3>Copia de seguridad</h3><p class="sub">Descarga todos los datos o restaura una copia anterior.</p><div class="row2"><button class="btn" data-act="export">${ic('down-file')}Descargar data.json</button><button class="btn" data-act="importPick">${ic('up-file')}Importar</button></div></div>`;
+}
+function rateRow(r){return`<div class="rrow" data-id="${esc(r.id)}"><input type="text" class="r-name" value="${esc(r.name)}" placeholder="Nombre (Dólar)" aria-label="Nombre"><input type="text" class="r-sym" value="${esc(r.sym)}" placeholder="USD" aria-label="Símbolo"><input type="text" class="r-val" inputmode="decimal" value="${esc(r.value)}" placeholder="Valor en CUP" aria-label="Valor en CUP"><button class="icobtn" data-act="rateDel" aria-label="Quitar">${ic('trash')}</button>${r.ex?'<span class="ex">Ejemplo: no se muestra al público hasta que guardes.</span>':''}</div>`}
+function tabRates(){return`<div class="box"><h3>Otras tasas</h3><p class="sub">Dólar, euro, MLC, USDT… lo que quieras mostrar junto al saldo. La flecha de cambio se calcula sola al guardar.</p>
+  <div id="rateList">${data.rates.map(rateRow).join('')}</div><div class="row2"><button class="btn" data-act="rateAdd">${ic('plus')}Añadir tasa</button><button class="btn primary" data-act="rateSave">${ic('check')}Guardar tasas</button></div></div>`}
+function tabNotice(){const n=data.notice;return`<div class="box"><h3>Aviso en la portada</h3><p class="sub">Un mensaje destacado arriba de la tasa: mantenimiento, cambios de horario, alertas.</p>
+  <label class="switch"><input type="checkbox" id="nOn" ${n.active?'checked':''}>Mostrar aviso</label>
+  <label for="nType">Tipo</label><select id="nType"><option value="info" ${n.type!=='warn'?'selected':''}>Informativo</option><option value="warn" ${n.type==='warn'?'selected':''}>Importante</option></select>
+  <label for="nText">Mensaje</label><textarea id="nText" maxlength="240">${esc(n.text)}</textarea><div class="row2"><button class="btn primary" data-act="noticeSave">${ic('check')}Guardar aviso</button></div></div>`}
+const RULES=`rules_version = '2';
+service cloud.firestore {
+  match /databases/{db}/documents {
+    match /site/data {
+      allow read: if true;
+      allow write: if request.auth != null
+        && request.auth.token.email == 'TU_CORREO@ejemplo.com';
+    }
+  }
+}`;
+function tabSet(){const s=data.settings;return`<div class="box"><h3>Datos del sitio</h3>
+  <label for="sSite">Nombre del sitio</label><input type="text" id="sSite" value="${esc(s.site)}" maxlength="40">
+  <label for="sTag">Frase bajo el nombre</label><input type="text" id="sTag" value="${esc(s.tagline)}" maxlength="70">
+  <label for="sTg">Enlace del canal de Telegram</label><input type="url" id="sTg" value="${esc(s.telegram)}" placeholder="https://t.me/tucanal">
+  <label for="sWa">Enlace del canal de WhatsApp</label><input type="url" id="sWa" value="${esc(s.whatsapp)}" placeholder="https://whatsapp.com/channel/…">
+  <div class="row2"><button class="btn primary" data-act="setSave">${ic('check')}Guardar ajustes</button></div></div>
+  <div class="box"><h3>Cómo se publica</h3>
+  ${ONLINE?`<div class="bar ok"><span>Conectado a Firebase: cada cambio se ve al instante para todos.</span></div>`:`<div class="bar"><span>Modo local: lo que publiques aquí solo lo ves tú hasta que subas <b>data.json</b> a tu hosting.</span></div>${CONFIG.ADMIN_PASSWORD==='admin123'?'<div class="bar"><span>Aún usas la contraseña de ejemplo. Cámbiala en CONFIG dentro de index.html.</span></div>':''}`}
+  <details class="g" ${ONLINE?'':'open'}><summary>Opción A · Sencilla (sin cuentas)</summary><ol class="steps"><li>Publica la tasa en la pestaña <b>Publicar</b>.</li><li>Pulsa <b>Descargar data.json</b>.</li><li>Sube ese archivo a tu hosting, junto a index.html, reemplazando el anterior.</li></ol></details>
+  <details class="g"><summary>Opción B · En línea con Firebase (gratis, recomendada)</summary><ol class="steps"><li>Entra a <b>console.firebase.google.com</b> y crea un proyecto.</li><li>En <b>Firestore Database</b> crea la base de datos (modo producción).</li><li>En <b>Authentication</b> activa “Correo/contraseña” y crea tu usuario administrador.</li><li>En Firestore → <b>Reglas</b> pega esto (con tu correo) y publica:<pre>${esc(RULES)}</pre><div class="row2"><button class="btn sm" data-act="copyRules">${ic('copy')}Copiar reglas</button></div></li><li>En <b>Configuración del proyecto</b> copia <b>apiKey</b> y <b>projectId</b> y pégalos en CONFIG.FIREBASE dentro de index.html. Vuelve a subir el archivo.</li></ol></details></div>
+  <div class="box"><h3>Sesión</h3><div class="row2">${!ONLINE?`<button class="btn danger" data-act="discard">${ic('trash')}Descartar cambios locales</button>`:''}<button class="btn" data-act="logout">${ic('logout')}Cerrar sesión</button></div></div>`}
+function renderAdmin(){
+  const box=$('#adm'),bk=$('#back');box.classList.toggle('on',adminOpen);bk.classList.toggle('on',adminOpen);
+  if(!adminOpen){box.innerHTML='';return}
+  if(!isAdmin()){box.innerHTML=loginView();return}
+  const keepScroll=$('.adm-b')?.scrollTop||0;
+  box.innerHTML=`<div class="adm-h"><div><h2>Panel de administración</h2><small class="${ONLINE?'on':''}">${ONLINE?'● En línea · Firebase':'Modo local'}</small></div><button class="icobtn" data-act="admClose" aria-label="Cerrar panel">${ic('close')}</button></div>
+  <nav class="adm-tabs" role="tablist">${TABS.map(([k,i,l])=>`<button role="tab" data-act="tab" data-t="${k}" aria-selected="${k===tab}">${ic(i)}${l}</button>`).join('')}</nav>
+  <div class="adm-b">${{pub:tabPub,hist:tabHist,rates:tabRates,notice:tabNotice,set:tabSet}[tab]()}</div>`;
+  $('.adm-b').scrollTop=keepScroll;if(tab==='pub')updatePreview();
+}
+function updatePreview(){
+  const el=$('#pPrev');if(!el)return;const d=$('#pDate').value,v=parseNum($('#pVal').value);
+  if(!v){el.textContent='Escribe la tasa de hoy.';return}
+  const prev=[...data.history].reverse().find(x=>x.d<d);
+  el.innerHTML=prev?(()=>{const df=v-prev.v,dr=dirOf(df);return`Frente a la tasa anterior (${esc(shortDate(prev.d))}: ${fmt(prev.v)}): <b class="${dr}">${sgn(df)} CUP (${sgn(df/prev.v*100,1)}%)</b>`})():`Se publicará <b>${fmt(v)} CUP</b> por cada 1 de saldo.`;
+}
+function openAdmin(){adminOpen=true;document.body.style.overflow='hidden';renderAdmin();setTimeout(()=>$('#lPass,#pVal')?.focus(),380)}
+function closeAdmin(){adminOpen=false;document.body.style.overflow='';renderAdmin()}
+const errMsg=m=>/INVALID|EMAIL_NOT_FOUND|PASSWORD/.test(m)?'Correo o contraseña incorrectos.':/TOO_MANY/.test(m)?'Demasiados intentos. Espera unos minutos.':'No se pudo entrar. Revisa tu conexión.';
+
+async function publish(){
+  const d=$('#pDate').value,v=parseNum($('#pVal').value),note=$('#pNote').value.trim();
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(d))return toast('Elige una fecha válida',true);
+  if(!(v>0&&v<100000))return toast('Escribe una tasa válida, por ejemplo 3.80',true);
+  if(data.demo){if(!confirm('Se borrarán los datos de ejemplo y empezarás con tu primera tasa real. ¿Continuar?'))return;data.history=[];data.demo=false}
+  const e={d,v:round2(v),note},old=data.history.find(x=>x.d===d);e.t=new Date().toISOString();
+  const i=data.history.findIndex(x=>x.d===d);if(i>=0)data.history[i]=e;else data.history.push(e);
+  data.history.sort((a,b)=>a.d<b.d?-1:1);pubDraft=null;animated=false;
+  if(await commit(old?'Tasa actualizada':'Tasa publicada')){calc.cup='';renderCalc()}
+}
+
+/* ═══════════ EVENTOS ═══════════ */
+const ACT={
+  admOpen:openAdmin,admClose:closeAdmin,
+  tab:b=>{tab=b.dataset.t;renderAdmin()},
+  step:b=>{const i=$('#pVal');i.value=Math.max(0,round2((parseNum(i.value)||(stats()?.cur.v||0))+parseFloat(b.dataset.v))).toFixed(2);updatePreview()},
+  publish,
+  edit:b=>{const x=data.history.find(y=>y.d===b.dataset.d);if(!x)return;pubDraft={d:x.d,v:x.v,note:x.note};tab='pub';renderAdmin()},
+  del:async b=>{if(!confirm('¿Eliminar la tasa del '+shortDate(b.dataset.d)+'?'))return;data.history=data.history.filter(x=>x.d!==b.dataset.d);animated=false;await commit('Tasa eliminada')},
+  rateAdd:()=>{$('#rateList').insertAdjacentHTML('beforeend',rateRow({id:'r'+Date.now(),name:'',sym:'',value:''}))},
+  rateDel:b=>b.closest('.rrow').remove(),
+  rateSave:async()=>{
+    const old=Object.fromEntries(data.rates.map(r=>[r.id,r]));
+    data.rates=$$('#rateList .rrow').map(row=>{const id=row.dataset.id,name=$('.r-name',row).value.trim(),sym=$('.r-sym',row).value.trim(),v=parseNum($('.r-val',row).value),o=old[id];
+      if(!name||!v)return null;return{id,name,sym:sym||name,value:v,prev:o?(o.value!==v?o.value:o.prev):null}}).filter(Boolean);
+    await commit('Tasas guardadas')},
+  noticeSave:async()=>{data.notice={active:$('#nOn').checked,type:$('#nType').value,text:$('#nText').value.trim()};await commit('Aviso guardado')},
+  setSave:async()=>{data.settings={site:$('#sSite').value.trim()||'Saldo Cuba',tagline:$('#sTag').value.trim(),telegram:$('#sTg').value.trim(),whatsapp:$('#sWa').value.trim()};await commit('Ajustes guardados')},
+  export:()=>{const b=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='data.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000);localStorage.removeItem('tsc_dirty');toast('data.json descargado. Súbelo a tu hosting.');renderAdmin()},
+  importPick:()=>$('#fImport').click(),
+  discard:async()=>{if(!confirm('Se borrarán los cambios guardados en este dispositivo. ¿Continuar?'))return;localStorage.removeItem(LS);localStorage.removeItem('tsc_dirty');animated=false;await loadData();renderAll();toast('Cambios locales descartados')},
+  logout:()=>logout(),
+  copyRules:()=>copy(RULES,'Reglas copiadas'),
+  shareWA:()=>{const t=shareText();if(t)window.open('https://wa.me/?text='+encodeURIComponent(t),'_blank','noopener')},
+  shareTG:()=>{const t=shareText();if(t)window.open('https://t.me/share/url?url='+encodeURIComponent(siteUrl()||'https://t.me')+'&text='+encodeURIComponent(t.replace(siteUrl(),'').trim()),'_blank','noopener')},
+  copyText:()=>{const t=shareText();t?copy(t,'Texto copiado'):toast('Aún no hay tasa',true)},
+  shareImg:shareImage,
+  range:b=>{range=+b.dataset.r;$$('#sChart .tabs button').forEach(x=>x.setAttribute('aria-selected',x===b));drawChart()},
+  moreHist:()=>{histLimit+=30;renderHist()},
+  quick:b=>{$('#cSaldo').value=b.dataset.v;recalc('saldo')},
+  copyCalc:()=>copy($('#calcRes').textContent+` (tasa ${fmt(curRate())})`,'Resultado copiado')
+};
+document.addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(!b)return;if(b.classList.contains('back')&&e.target!==b)return;ACT[b.dataset.act]?.(b,e)});
+document.addEventListener('input',e=>{
+  const t=e.target;
+  if(t.id==='cSaldo')recalc('saldo');else if(t.id==='cCup')recalc('cup');
+  else if(t.id==='cRate'){calc.rate=t.value;recalc('saldo')}
+  else if(t.id==='pVal'||t.id==='pDate')updatePreview();
+});
+document.addEventListener('change',e=>{
+  if(e.target.id==='cCustom'){calc.custom=e.target.checked;$('#cRate').classList.toggle('hide',!calc.custom);if(calc.custom)$('#cRate').focus();recalc('saldo')}
+  if(e.target.id==='fImport'){
+    const f=e.target.files[0];if(!f)return;const rd=new FileReader();
+    rd.onload=async()=>{try{const j=JSON.parse(rd.result);if(!valid(j))throw 0;if(!confirm('Esto reemplaza los datos actuales por los del archivo. ¿Continuar?'))return;data=normalize(j);animated=false;await commit('Datos importados')}catch(_){toast('Ese archivo no es un data.json válido',true)}};
+    rd.readAsText(f);e.target.value='';
+  }
+});
+document.addEventListener('submit',async e=>{
+  if(e.target.id!=='loginForm')return;e.preventDefault();const err=$('#lErr'),pass=$('#lPass').value;err.textContent='';
+  if(ONLINE){const b=e.target.querySelector('button');b.disabled=true;try{await fbLogin($('#lEmail').value.trim(),pass);renderAdmin()}catch(x){err.textContent=errMsg(String(x.message));b.disabled=false}}
+  else if(pass===CONFIG.ADMIN_PASSWORD){sessionStorage.setItem('tsc_admin','1');renderAdmin()}
+  else err.textContent='Contraseña incorrecta.';
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&adminOpen)closeAdmin()});
+let rz;addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(drawChart,150)});
+
+/* tema claro / oscuro */
+function setTheme(t,save){document.documentElement.dataset.theme=t;$('#themeBtn').setAttribute('aria-checked',t==='dark');$('#metaTheme').content=t==='dark'?'#070D1C':'#EEF2F9';if(save){try{localStorage.setItem('tsc_theme',t)}catch(e){}}}
+$('#themeBtn').addEventListener('click',()=>{setTheme(document.documentElement.dataset.theme==='dark'?'light':'dark',true);drawChart()});
+setTheme(document.documentElement.dataset.theme,false);
+
+/* arranque */
+$('#yr').textContent=new Date().getFullYear();
+renderFaq();
+loadData().then(renderAll);
+})();
+</script>
+</body>
+</html>
